@@ -1,18 +1,16 @@
-# Agent Starter
+# Developer Productivity Agent (Cloudflare AI Assignment)
 
-![npm i agents command](./npm-agents-banner.svg)
+This is a customized Cloudflare Agent built for the Cloudflare internship application. It is built using the [Agents SDK](https://developers.cloudflare.com/agents/).
 
-<a href="https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agents-starter"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
-
-A starter template for building AI chat agents on Cloudflare, powered by the [Agents SDK](https://developers.cloudflare.com/agents/).
-
-Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, task scheduling, and vision (image input).
+## Customizations Made for Assignment
+- **Coordination & Memory**: Utilizes Cloudflare Durable Objects and SQLite under the hood to coordinate tasks and securely persist the state/memory of the agent chat.
+- **LLM**: Changed to use `Llama 3.3 70b` on Workers AI as recommended.
+- **Persona**: Changed to act as a **Developer Productivity Agent** that helps an engineer coordinate work, calculate capacities, and check the weather for their data centers.
+- **User Input**: Uses the React chat interface based on Kumo components. Modified the UI prompts to reflect developer-focused capabilities.
 
 ## Quick start
 
 ```bash
-npx create-cloudflare@latest --template cloudflare/agents-starter
-cd agents-starter
 npm install
 npm run dev
 ```

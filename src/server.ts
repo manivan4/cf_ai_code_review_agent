@@ -70,10 +70,10 @@ export class ChatAgent extends AIChatAgent<Env> {
     const workersai = createWorkersAI({ binding: this.env.AI });
 
     const result = streamText({
-      model: workersai("@cf/moonshotai/kimi-k2.5", {
+      model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         sessionAffinity: this.sessionAffinity
       }),
-      system: `You are a helpful assistant that can understand images. You can check the weather, get the user's timezone, run calculations, and schedule tasks. When users share images, describe what you see and answer questions about them.
+      system: `You are a Developer Productivity Agent. You help developers manage their schedules, run calculations for server capacity, and track tasks. You can check the weather for their data centers, get their timezone, calculate numbers efficiently, and schedule task reminders. Always adopt a professional but encouraging tone.
 
 ${getSchedulePrompt({ date: new Date() })}
 
