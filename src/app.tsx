@@ -664,7 +664,7 @@ function Chat() {
               contents={
                 <div className="flex flex-wrap justify-center gap-2">
                   {[
-                    "Review my schedule for today",
+                    "Get stats for the cloudflare/agents-starter repo on GitHub",
                     "Calculate server capacity needs: 50 * 24",
                     "Remind me in 10 minutes to review that PR",
                     "What's the weather like in Seattle?"

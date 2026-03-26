@@ -73,7 +73,7 @@ export class ChatAgent extends AIChatAgent<Env> {
       model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         sessionAffinity: this.sessionAffinity
       }),
-      system: `You are a Developer Productivity Agent. You help developers manage their schedules, run calculations for server capacity, and track tasks. You can check the weather for their data centers, get their timezone, calculate numbers efficiently, and schedule task reminders. Always adopt a professional but encouraging tone.
+      system: `You are a Developer Productivity Agent. You help developers manage their schedules, run calculations for server capacity, and track tasks. You can fetch stats for GitHub repositories to review community traction, check the weather for data centers, get timezones, calculate numbers, and schedule task reminders. Always adopt a professional but encouraging tone.
 
 ${getSchedulePrompt({ date: new Date() })}
 
@@ -86,6 +86,35 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
       tools: {
         // MCP tools from connected servers
         ...mcpTools,
+
+        getGitHubRepoStats: tool({
+          description: "Fetch real-time statistics for a public GitHub repository.",
+          inputSchema: z.object({
+            owner: z.string().describe("The owner of the repository (e.g., 'cloudflare')"),
+            repo: z.string().describe("The name of the repository (e.g., 'agents-starter')")
+          }),
+          execute: async ({ owner, repo }) => {
+            try {
+              const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+                headers: { "User-Agent": "Cloudflare-AI-Agent" }
+              });
+              if (!res.ok) {
+                return { error: `GitHub API returned ${res.status}: ${res.statusText}` };
+              }
+              const data: any = await res.json();
+              return {
+                name: data.full_name,
+                description: data.description,
+                stars: data.stargazers_count,
+                forks: data.forks_count,
+                open_issues: data.open_issues_count,
+                language: data.language
+              };
+            } catch (error) {
+              return { error: String(error) };
+            }
+          }
+        }),
 
         // Server-side tool: runs automatically on the server
         getWeather: tool({
