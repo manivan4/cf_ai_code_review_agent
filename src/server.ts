@@ -79,14 +79,15 @@ export class ChatAgent extends AIChatAgent<Env, { preferences?: string }> {
 Your capabilities:
 - Fetch real-time GitHub repository stats (stars, forks, issues)
 - Check weather for any city
-- Analyze code snippets for issues
+- Deep code analysis (security, complexity, anti-patterns)
+- Summarize any website by URL
 - Perform math calculations
 - Schedule reminders and tasks
 - Save and recall user preferences
 - Deploy services to staging (requires user approval)
 - Detect the user's timezone
 
-When a user mentions a city and weather, use the getWeather tool. When they mention a GitHub repo, use getGitHubRepoStats. When they ask you to remember something, use saveUserPreference. Be proactive and helpful!
+When a user mentions a city and weather, use the getWeather tool. When they mention a GitHub repo, use getGitHubRepoStats. When they share a URL, use summarizeWebsite. When they share code, use analyzeCodeSnippet. When they ask you to remember something, use saveUserPreference. Be proactive and helpful!
 
 User Preferences (Keep these in mind for your responses):
 ${this.state.preferences || "No preferences saved yet."}
@@ -117,23 +118,46 @@ If the user asks to schedule a task, use the scheduleTask tool.`,
         }),
 
         analyzeCodeSnippet: tool({
-          description: "Perform static analysis on a code snippet to find bugs or calculate complexity.",
+          description: "Perform deep static analysis on a code snippet to find bugs, anti-patterns, security issues, and estimate complexity.",
           inputSchema: z.object({
             code: z.string().describe("The code snippet to analyze")
           }),
           execute: async ({ code }) => {
-            const lines = code.split("\n").length;
-            const hasConsoleLog = code.includes("console.log");
-            const hasAny = code.includes(": any");
-            
-            let issues = [];
-            if (hasConsoleLog) issues.push("Warning: contains console.log statements");
-            if (hasAny) issues.push("Warning: use of 'any' type in TypeScript is generally discouraged");
-            if (lines > 20) issues.push("Note: Function is quite long, consider refactoring");
-            
+            const lines = code.split("\n");
+            const issues: string[] = [];
+            const metrics: Record<string, number | string> = { linesOfCode: lines.length };
+
+            // Complexity: count branches
+            const branchKeywords = ["if", "else if", "case", "catch", "&&", "||", "?"];
+            let complexity = 1;
+            for (const kw of branchKeywords) complexity += (code.match(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g")) || []).length;
+            metrics.estimatedCyclomaticComplexity = complexity;
+            if (complexity > 10) issues.push(`High complexity (${complexity}) — consider breaking into smaller functions`);
+
+            // Security red flags
+            if (code.includes("eval(")) issues.push("CRITICAL: eval() is a major security risk");
+            if (code.includes("innerHTML")) issues.push("CRITICAL: innerHTML can lead to XSS vulnerabilities");
+            if (/document\.write/.test(code)) issues.push("Warning: document.write is discouraged");
+
+            // Anti-patterns
+            if (code.includes("console.log")) issues.push("Cleanup: remove console.log before production");
+            if (code.includes(": any")) issues.push("Type safety: avoid using 'any' in TypeScript");
+            if (/\.then\(.*\.then\(/.test(code)) issues.push("Anti-pattern: nested .then() chains — use async/await instead");
+            if (/callback.*callback|cb.*cb/i.test(code)) issues.push("Anti-pattern: possible callback hell detected");
+
+            // Code smells
+            const magicNumbers = code.match(/[^\w.]\d{2,}[^\w.]/g);
+            if (magicNumbers && magicNumbers.length > 2) issues.push(`Code smell: ${magicNumbers.length} magic numbers found — use named constants`);
+            if (/TODO|FIXME|HACK|XXX/i.test(code)) issues.push("Note: contains TODO/FIXME/HACK comments that need attention");
+            if (lines.length > 30) issues.push("Readability: function exceeds 30 lines — consider refactoring");
+
+            // Missing patterns
+            if (code.includes("await ") && !code.includes("try")) issues.push("Robustness: async code without try/catch error handling");
+            if (code.includes("fetch(") && !code.includes(".ok") && !code.includes("catch")) issues.push("Robustness: fetch() without response status or error checking");
+
             return {
-              linesOfCode: lines,
-              issuesFound: issues.length > 0 ? issues : ["Code looks clean and concise."]
+              metrics,
+              issues: issues.length > 0 ? issues : ["Excellent! No issues detected. Code looks clean and production-ready."]
             };
           }
         }),
@@ -146,6 +170,34 @@ If the user asks to schedule a task, use the scheduleTask tool.`,
           needsApproval: async () => true,
           execute: async ({ serviceName }) => {
             return `Successfully deployed ${serviceName} to staging environment!`;
+          }
+        }),
+
+        summarizeWebsite: tool({
+          description: "Fetch a URL and return a summary of the page including title, description, and word count.",
+          inputSchema: z.object({
+            url: z.string().url().describe("The full URL to fetch and summarize")
+          }),
+          execute: async ({ url }) => {
+            try {
+              const res = await fetch(url, {
+                headers: { "User-Agent": "Cloudflare-AI-Agent" }
+              });
+              if (!res.ok) return { error: `Failed to fetch: ${res.status} ${res.statusText}` };
+              const html = await res.text();
+              const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+              const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i);
+              const textOnly = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+              return {
+                url,
+                title: titleMatch ? titleMatch[1].trim() : "No title found",
+                description: descMatch ? descMatch[1].trim() : "No meta description found",
+                wordCount: textOnly.split(/\s+/).length,
+                fetchedAt: new Date().toISOString()
+              };
+            } catch (error) {
+              return { error: String(error) };
+            }
           }
         }),
 

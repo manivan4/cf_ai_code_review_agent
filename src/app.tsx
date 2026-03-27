@@ -452,6 +452,7 @@ function Chat() {
             <h1 className="text-lg font-semibold text-kumo-default">
               <span className="mr-2">👨‍💻</span>Developer Productivity Agent
             </h1>
+            <span className="text-xs text-kumo-contrast opacity-60 hidden sm:inline">Code · Deploy · Monitor</span>
             <Badge variant="secondary">
               <ChatCircleDotsIcon size={12} weight="bold" className="mr-1" />
               AI Chat
@@ -664,10 +665,10 @@ function Chat() {
               contents={
                 <div className="flex flex-wrap justify-center gap-2">
                   {[
-                    "Save my preference: I exclusively use TypeScript.",
-                    "Analyze this code: function test() { console.log('hi'); }",
-                    "Deploy the 'auth' service to staging.",
-                    "Get stats for cloudflare/agents-starter on GitHub"
+                    "Analyze: async function load() { const d = await fetch('/api'); console.log(d) }",
+                    "Summarize https://developers.cloudflare.com/agents/",
+                    "Get GitHub stats for cloudflare/workers-sdk",
+                    "Deploy auth-service to staging"
                   ].map((prompt) => (
                     <Button
                       key={prompt}
