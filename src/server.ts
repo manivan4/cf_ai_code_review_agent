@@ -34,8 +34,9 @@ function inlineDataUrls(messages: ModelMessage[]): ModelMessage[] {
   });
 }
 
-export class ChatAgent extends AIChatAgent<Env> {
+export class ChatAgent extends AIChatAgent<Env, { preferences?: string }> {
   maxPersistedMessages = 100;
+  initialState = { preferences: "" };
 
   onStart() {
     // Configure OAuth popup behavior for MCP servers that require authentication
@@ -75,6 +76,9 @@ export class ChatAgent extends AIChatAgent<Env> {
       }),
       system: `You are a Developer Productivity Agent. You help developers manage their schedules, run calculations for server capacity, and track tasks. You can fetch stats for GitHub repositories to review community traction, check the weather for data centers, get timezones, calculate numbers, and schedule task reminders. Always adopt a professional but encouraging tone.
 
+User Preferences (Keep these in mind for your responses):
+${this.state.preferences || "No preferences saved yet."}
+
 ${getSchedulePrompt({ date: new Date() })}
 
 If the user asks to schedule a task, use the schedule tool to schedule the task.`,
@@ -86,6 +90,52 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
       tools: {
         // MCP tools from connected servers
         ...mcpTools,
+
+        saveUserPreference: tool({
+          description: "Save a user preference (e.g., tech stack, name, role) to your persistent memory.",
+          inputSchema: z.object({
+            preference: z.string().describe("The preference to remember")
+          }),
+          execute: async ({ preference }) => {
+            const currentPrefs = this.state.preferences ? this.state.preferences + "\n" : "";
+            const newPrefs = currentPrefs + "- " + preference;
+            this.setState({ ...this.state, preferences: newPrefs });
+            return `Saved preference: ${preference}`;
+          }
+        }),
+
+        analyzeCodeSnippet: tool({
+          description: "Perform static analysis on a code snippet to find bugs or calculate complexity.",
+          inputSchema: z.object({
+            code: z.string().describe("The code snippet to analyze")
+          }),
+          execute: async ({ code }) => {
+            const lines = code.split("\n").length;
+            const hasConsoleLog = code.includes("console.log");
+            const hasAny = code.includes(": any");
+            
+            let issues = [];
+            if (hasConsoleLog) issues.push("Warning: contains console.log statements");
+            if (hasAny) issues.push("Warning: use of 'any' type in TypeScript is generally discouraged");
+            if (lines > 20) issues.push("Note: Function is quite long, consider refactoring");
+            
+            return {
+              linesOfCode: lines,
+              issuesFound: issues.length > 0 ? issues : ["Code looks clean and concise."]
+            };
+          }
+        }),
+
+        deployToStaging: tool({
+          description: "Deploy the current codebase to the staging environment. Requires human approval.",
+          inputSchema: z.object({
+            serviceName: z.string().describe("Name of the service to deploy")
+          }),
+          needsApproval: async () => true,
+          execute: async ({ serviceName }) => {
+            return `Successfully deployed ${serviceName} to staging environment!`;
+          }
+        }),
 
         getGitHubRepoStats: tool({
           description: "Fetch real-time statistics for a public GitHub repository.",

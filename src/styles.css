@@ -11,3 +11,18 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* Hacker Theme Overrides */
+html[data-mode="dark"] {
+  --color-kumo-base: #0f172a !important;
+  --color-kumo-elevated: #020617 !important;
+  --color-kumo-default: #10b981 !important;
+  --color-kumo-contrast: #047857 !important;
+  --color-kumo-accent: #34d399 !important;
+  --color-kumo-line: #1e293b !important;
+}
+
+html[data-mode="dark"] body {
+  font-family: ui-monospace, SFMono-Regular, monospace !important;
+  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #020617 100%);
+}

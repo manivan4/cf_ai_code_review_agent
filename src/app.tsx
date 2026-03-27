@@ -664,10 +664,10 @@ function Chat() {
               contents={
                 <div className="flex flex-wrap justify-center gap-2">
                   {[
-                    "Get stats for the cloudflare/agents-starter repo on GitHub",
-                    "Calculate server capacity needs: 50 * 24",
-                    "Remind me in 10 minutes to review that PR",
-                    "What's the weather like in Seattle?"
+                    "Save my preference: I exclusively use TypeScript.",
+                    "Analyze this code: function test() { console.log('hi'); }",
+                    "Deploy the 'auth' service to staging.",
+                    "Get stats for cloudflare/agents-starter on GitHub"
                   ].map((prompt) => (
                     <Button
                       key={prompt}
