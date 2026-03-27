@@ -71,7 +71,7 @@ export class ChatAgent extends AIChatAgent<Env, { preferences?: string }> {
     const workersai = createWorkersAI({ binding: this.env.AI });
 
     const result = streamText({
-      model: workersai("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+      model: workersai("@cf/meta/llama-4-scout-17b-16e-instruct", {
         sessionAffinity: this.sessionAffinity
       }),
       system: `You are a Developer Productivity Agent. You help developers manage their schedules, run calculations for server capacity, and track tasks. You can fetch stats for GitHub repositories to review community traction, check the weather for data centers, get timezones, calculate numbers, and schedule task reminders. Always adopt a professional but encouraging tone.

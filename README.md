@@ -4,7 +4,7 @@ This is a customized Cloudflare Agent built for the Cloudflare internship applic
 
 ## Customizations Made for Assignment
 - **Coordination & Memory**: Utilizes Cloudflare Durable Objects and SQLite under the hood to coordinate tasks and securely persist the state/memory of the agent chat.
-- **LLM**: Changed to use `Llama 3.3 70b` on Workers AI as recommended.
+- **LLM**: Changed to use `Llama 4 Scout` (`@cf/meta/llama-4-scout-17b-16e-instruct`) on Workers AI for strong tool calling support.
 - **Persona**: Changed to act as a **Developer Productivity Agent** that helps an engineer coordinate work, calculate capacities, and check the weather for their data centers.
 - **User Input**: Uses the React chat interface based on Kumo components. Modified the UI prompts to reflect developer-focused capabilities.
 
